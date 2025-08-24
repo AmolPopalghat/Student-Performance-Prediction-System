@@ -2,6 +2,7 @@ import joblib
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+from sklearn.preprocessing import StandardScaler
 
 # Improved and dynamic CSS
 def inject_dynamic_css(score):
@@ -117,16 +118,20 @@ class StudentPerformancePredictor:
     def __init__(self):
         self.model = None
         self.scaler = None
-        self._load_model()
+        self._load_model_and_scaler()
     
-    def _load_model(self):
-        """Load pre-trained model and scaler from model.pkl"""
+    def _load_model_and_scaler(self):
         try:
-            data = joblib.load("model.pkl")  # model.pkl should contain {'model': ..., 'scaler': ...}
-            self.model = data['model']
-            self.scaler = data['scaler']
+            self.model = joblib.load("model.pkl")
+            # Fit StandardScaler with typical value ranges (demo only)
+            self.scaler = StandardScaler()
+            X_fit = np.array([
+                [0, 0, 0, 3, 0],      # min values
+                [40, 100, 100, 12, 2] # max values
+            ])
+            self.scaler.fit(X_fit)
         except Exception as e:
-            st.error(f"Error loading model: {str(e)}")
+            st.error(f"Error loading model or initializing scaler: {str(e)}")
     
     def predict(self, hours_studied, attendance, previous_scores, sleep_hours, motivation_level):
         """Make prediction based on input features"""
@@ -259,8 +264,6 @@ def main():
                 hours_studied, attendance, previous_scores, 
                 sleep_hours, motivation_numeric
             )
-        
-        inject_dynamic_css(predicted_score)
         
         if predicted_score is not None:
             
